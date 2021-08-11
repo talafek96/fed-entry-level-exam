@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOMServer from "react-dom/server";
 import "./App.scss";
 import { createApiClient, Ticket } from "./api";
 
@@ -48,7 +47,7 @@ export class App extends React.PureComponent<{}, AppState> {
       <ul className="tickets">
         {filteredTickets.map((ticket) => (
           <li key={ticket.id} className="ticket">
-            <a className="hide-button" onClick={() => this.onHide(ticket)}>
+            <a href="#" className="hide-button" onClick={() => this.onHide(ticket)}>
               Hide
             </a>
             <h5 className="title">{ticket.title}</h5>
@@ -88,8 +87,20 @@ export class App extends React.PureComponent<{}, AppState> {
     });
   };
 
+  onRestore = () => {
+    let ticketCopy = this.state.tickets
+      ? this.state.tickets!.map((ticket) => {
+          let newTicket = ticket;
+          newTicket.isHidden = false;
+          return newTicket;
+        })
+      : this.state.tickets;
+    this.setState({ tickets: ticketCopy, hiddenCount: 0 });
+  };
+
   render() {
-    const { tickets } = this.state;
+    // TODO: Add hidden-res css
+    const { tickets, hiddenCount } = this.state;
 
     return (
       <main>
@@ -102,7 +113,19 @@ export class App extends React.PureComponent<{}, AppState> {
           />
         </header>
         {tickets ? (
-          <div className="results">Showing {tickets.length} results</div>
+          <div className="results">
+            Showing {tickets.length - hiddenCount} results
+            {hiddenCount ? (
+              <div className="hidden-res">
+                {" "}
+                ({hiddenCount} hidden tickets -{" "}
+                <a href="#" className="restore-button" onClick={this.onRestore}>
+                  restore
+                </a>
+                ){" "}
+              </div>
+            ) : null}
+          </div>
         ) : null}
         {tickets ? this.renderTickets(tickets) : <h2>Loading..</h2>}
       </main>
@@ -124,7 +147,8 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
     return this.state.expanded ? "See less" : "See more";
   };
 
-  textToHtml = (text: string) => { // TODO: Make this formatter work.
+  textToHtml = (text: string) => {
+    // TODO: Make this formatter work.
     let breakText = text; //.replace(/(\r\n|\r|\n)/g, "\u000a");
     let formatted = breakText.replace(/ /g, "\u00a0");
     console.log(formatted);
@@ -150,7 +174,6 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
 
   render() {
     // TODO: Make text show with correct formatting.
-    const { expanded } = this.state;
     const { text } = this.props;
 
     let processed = this.processText(text);
@@ -160,7 +183,7 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
         <span className="content" id={this.props.id}>
           {processed}
         </span>
-        <a onClick={this.handleExpand}>{this.formatExpand(text)}</a>
+        <a href="#" onClick={this.handleExpand}>{this.formatExpand(text)}</a>
       </React.Fragment>
     );
   }
