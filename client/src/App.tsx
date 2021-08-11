@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.scss";
 import { createApiClient, Ticket } from "./api";
+import { string } from "yargs";
 
 export type AppState = {
   tickets?: Ticket[];
@@ -17,8 +18,11 @@ export type ContentProps = {
   id: string;
 };
 
+export type TagProps = {
+  label: string;
+};
+
 const api = createApiClient();
-const MaxUnexpanded = 160;
 
 export class App extends React.PureComponent<{}, AppState> {
   state: AppState = {
@@ -34,6 +38,32 @@ export class App extends React.PureComponent<{}, AppState> {
     });
   }
 
+  printLabels = (labels?: string[]) => {
+    if (!labels) {
+      return null;
+    }
+    let count = 0;
+    let delim = 4;
+    let res: JSX.Element[] = [];
+    for (let i = 0; i < labels.length; i++) {
+      if ((i + 1) % delim === 0) {
+        res.push(
+          <span>
+            <Tag label={labels[i]} />
+            <br />
+          </span>
+        );
+      } else {
+        res.push(
+          <span>
+            <Tag label={labels[i]} />
+          </span>
+        );
+      }
+    }
+    return res;
+  };
+
   renderTickets = (tickets: Ticket[]) => {
     // TODO: Add counter of how many matching results were hidden.
     const filteredTickets = tickets.filter(
@@ -42,12 +72,11 @@ export class App extends React.PureComponent<{}, AppState> {
           this.state.search.toLowerCase()
         ) && (t.isHidden ? !t.isHidden : true)
     );
-
     return (
       <ul className="tickets">
         {filteredTickets.map((ticket) => (
           <li key={ticket.id} className="ticket">
-            <a href="#" className="hide-button" onClick={() => this.onHide(ticket)}>
+            <a className="hide-button" onClick={() => this.onHide(ticket)}>
               Hide
             </a>
             <h5 className="title">{ticket.title}</h5>
@@ -57,6 +86,7 @@ export class App extends React.PureComponent<{}, AppState> {
                 By {ticket.userEmail} |{" "}
                 {new Date(ticket.creationTime).toLocaleString()}
               </div>
+              <div className="tags">{this.printLabels(ticket.labels)}</div>
             </footer>
           </li>
         ))}
@@ -99,7 +129,6 @@ export class App extends React.PureComponent<{}, AppState> {
   };
 
   render() {
-    // TODO: Add hidden-res css
     const { tickets, hiddenCount } = this.state;
 
     return (
@@ -119,7 +148,7 @@ export class App extends React.PureComponent<{}, AppState> {
               <div className="hidden-res">
                 {" "}
                 ({hiddenCount} hidden tickets -{" "}
-                <a href="#" className="restore-button" onClick={this.onRestore}>
+                <a className="restore-button" onClick={this.onRestore}>
                   restore
                 </a>
                 ){" "}
@@ -133,6 +162,14 @@ export class App extends React.PureComponent<{}, AppState> {
   }
 }
 
+class Tag extends React.PureComponent<TagProps, {}> {
+  // state = { :  }
+  render() {
+    const { label } = this.props;
+    return <div className="tag">{label}</div>;
+  }
+}
+
 class Content extends React.PureComponent<ContentProps, ContentState> {
   state: ContentState = { expanded: false };
 
@@ -140,8 +177,8 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
     this.setState({ expanded: !this.state.expanded });
   };
 
-  formatExpand = (text: string) => {
-    if (text.length < MaxUnexpanded) {
+  formatExpand = (text: string, isLimited: boolean) => {
+    if (!isLimited) {
       return "";
     }
     return this.state.expanded ? "See less" : "See more";
@@ -155,35 +192,72 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
     return formatted;
   };
 
-  processText = (text: string) => {
+  processText = (text: string, isLimited: boolean) => {
     let trimmed = text.trim();
-    if (trimmed.length < 160) {
-      return text;
+    if (!isLimited) {
+      return {
+        text: trimmed,
+        isRestricted: false,
+      };
     }
-    let to_print: string;
+    const { expanded } = this.state;
+
+    return {
+      text: trimmed,
+      isRestricted: !expanded,
+    };
+  };
+
+  /* TODO: Delete this:
+  processText = (text: string, isLimited: boolean) => {
+    let trimmed = text.trim();
+    if (trimmed.length < 160 || !isLimited) {
+      return {
+        text: trimmed,
+        isRestricted: false
+      };
+    }
+    let toPrint: string;
+    let isRestricted: boolean;
     const { expanded } = this.state;
 
     if (!expanded) {
-      to_print = trimmed.substring(0, MaxUnexpanded).trim() + "...";
+      toPrint = trimmed.substring(0, MaxUnexpanded).trim() + "...";
+      isRestricted = true;
     } else {
-      to_print = trimmed;
+      toPrint = trimmed;
+      isRestricted = false;
     }
 
-    return to_print;
+    return {
+      text: trimmed,
+      isRestricted: isRestricted
+    };
   };
+  */
 
   render() {
     // TODO: Make text show with correct formatting.
     const { text } = this.props;
+    const isLimited = false; // Turn this to true to enable line restriction
 
-    let processed = this.processText(text);
+    let processed = this.processText(text, isLimited);
+    console.log(processed.text);
 
-    return (
+    return isLimited ? (
+      <React.Fragment>
+        <span
+          className={processed.isRestricted ? "restricted-content" : "content"}
+        >
+          {processed.text}
+        </span>
+        <a onClick={this.handleExpand}> {this.formatExpand(text, isLimited)}</a>
+      </React.Fragment>
+    ) : (
       <React.Fragment>
         <span className="content" id={this.props.id}>
-          {processed}
+          {processed.text}
         </span>
-        <a href="#" onClick={this.handleExpand}>{this.formatExpand(text)}</a>
       </React.Fragment>
     );
   }
