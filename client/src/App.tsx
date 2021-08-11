@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOMServer from "react-dom/server";
 import "./App.scss";
 import { createApiClient, Ticket } from "./api";
 
@@ -47,11 +48,7 @@ export class App extends React.PureComponent<{}, AppState> {
       <ul className="tickets">
         {filteredTickets.map((ticket) => (
           <li key={ticket.id} className="ticket">
-            <a
-              className="hide-button"
-              href="#"
-              onClick={() => this.onHide(ticket)}
-            >
+            <a className="hide-button" onClick={() => this.onHide(ticket)}>
               Hide
             </a>
             <h5 className="title">{ticket.title}</h5>
@@ -127,27 +124,65 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
     return this.state.expanded ? "See less" : "See more";
   };
 
-  render() { // TODO: Make text show with correct formatting.
+  textToHtml = (text: string) => { // TODO: Make this formatter work.
+    let breakText = text; //.replace(/(\r\n|\r|\n)/g, "\u000a");
+    let formatted = breakText.replace(/ /g, "\u00a0");
+    console.log(formatted);
+    return formatted;
+  };
+
+  processText = (text: string) => {
+    let trimmed = text.trim();
+    if (trimmed.length < 160) {
+      return text;
+    }
+    let to_print: string;
+    const { expanded } = this.state;
+
+    if (!expanded) {
+      to_print = trimmed.substring(0, MaxUnexpanded).trim() + "...";
+    } else {
+      to_print = trimmed;
+    }
+
+    return to_print;
+  };
+
+  render() {
+    // TODO: Make text show with correct formatting.
     const { expanded } = this.state;
     const { text } = this.props;
 
-    let unexpandedText = text
-      .substring(0, Math.min(MaxUnexpanded, text.length - 1))
-      .trimEnd();
-    console.log(text);
+    let processed = this.processText(text);
+
     return (
       <React.Fragment>
         <span className="content" id={this.props.id}>
-          {unexpandedText.length <= 160 && !expanded
-            ? unexpandedText + "..."
-            : text}
-          {expanded && // Show if expanded is true. */
-            unexpandedText.substring(MaxUnexpanded)}
+          {processed}
         </span>
         <a onClick={this.handleExpand}>{this.formatExpand(text)}</a>
       </React.Fragment>
     );
   }
 }
+/*.split(/(\r\n|\r|\n)/g)
+.map((line) => {
+  {
+    line;
+  }
+  <br />;
+})}*/
 
+/*
+{this.textToHtml(unexpandedText)
+.split(/(\r\n|\r|\n)/g)
+.map((line) => (
+<React.Fragment>{line + "\n"}</React.Fragment>
+))}
+{unexpandedText.length <= 160 && !expanded ? "..." : ""}
+{expanded && // Show if expanded is true.
+this.textToHtml(text.substring(MaxUnexpanded))
+.split(/(\r\n|\r|\n)/g)
+.map((line) => <React.Fragment>{line + "\n"}</React.Fragment>)}
+*/
 export default App;
