@@ -5,9 +5,9 @@ import Content from "./content"
 
 export interface TicketProps {
   ticket: Ticket;
-  onHide: (ticket: Ticket) => void
+  onHide: (ticket: Ticket) => void;
 }
-class TicketClass extends React.Component<TicketProps, { }> {
+class TicketClass extends Component<TicketProps, { }> {
 
   printLabels = (labels?: string[]) => {
     if (!labels) {
