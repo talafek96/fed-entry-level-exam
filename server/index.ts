@@ -2,12 +2,20 @@ import express from "express";
 import bodyParser = require("body-parser");
 import { tempData } from "./temp-data";
 import { serverAPIPort, APIPath } from "@fed-exam/config";
+import { Ticket } from "../client/src/api";
 
 console.log("starting server", { serverAPIPort, APIPath });
 
+export type ResDict = {
+  tickets: Ticket[];
+  pageCount: number;
+  pageSize: number;
+  totalCount: number;
+};
+
 const app = express();
 
-const PAGE_SIZE = 2000;
+const PAGE_SIZE = 20;
 
 app.use(bodyParser.json());
 
@@ -24,27 +32,43 @@ app.get(APIPath, (req, res) => {
     // Find a search query / fetch page query
     if (!req.query.search) {
       const page: number = req.query.page || 1;
-      const paginatedData = tempData.slice(
-        (page - 1) * PAGE_SIZE,
-        page * PAGE_SIZE
-      );
-      let resDict = {
+      const paginatedData = tempData
+        .filter((entry) => {
+          if (req.query.hiddenList.has(entry.id)) {
+            return false;
+          }
+          return true;
+        })
+        .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+      let resDict: ResDict = {
         tickets: paginatedData,
         pageCount: Math.ceil(tempData.length / PAGE_SIZE),
+        pageSize: PAGE_SIZE,
+        totalCount: tempData.length,
       };
       res.send(resDict);
       return;
     }
     const search = req.query["search"]!.toLowerCase();
     const searchRes = tempData.filter((entry) => {
-      (entry["title"].toLowerCase() + entry["content"].toLowerCase()).includes(
-        search
-      );
+      if (
+        (
+          entry["title"].toLowerCase() + entry["content"].toLowerCase()
+        ).includes(search)
+      ) {
+        if (req.query.hiddenList.has(entry.id)) {
+          return false;
+        }
+        return true;
+      }
+      return false;
     });
     const page: number = req.query.page || 1;
-    let resDict = {
+    let resDict: ResDict = {
       tickets: searchRes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
       pageCount: Math.ceil(searchRes.length / PAGE_SIZE),
+      pageSize: PAGE_SIZE,
+      totalCount: searchRes.length,
     };
     res.send(resDict);
     return;
@@ -54,13 +78,19 @@ app.get(APIPath, (req, res) => {
     return;
   } else {
     const page: number = req.query.page || 1;
-    const paginatedData = tempData.slice(
-      (page - 1) * PAGE_SIZE,
-      page * PAGE_SIZE
-    );
-    let resDict = {
+    const paginatedData = tempData
+      .filter((entry) => {
+        if (req.query.hiddenList.has(entry.id)) {
+          return false;
+        }
+        return true;
+      })
+      .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    let resDict: ResDict = {
       tickets: paginatedData,
       pageCount: Math.ceil(tempData.length / PAGE_SIZE),
+      pageSize: PAGE_SIZE,
+      totalCount: tempData.length,
     };
     res.send(resDict);
     return;

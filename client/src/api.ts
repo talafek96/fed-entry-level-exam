@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {APIRootPath} from '@fed-exam/config';
+import { ResDict } from '../../server/index'
 
 export type Ticket = {
     id: string,
@@ -8,18 +9,13 @@ export type Ticket = {
     creationTime: number;
     userEmail: string;
     labels?: string[];
-    isHidden?: boolean;
 }
 
 export type ReqArgs = {
     reqno: number,
     search?: string,
-    page?: number
-}
-
-export type ResDict = {
-    tickets: Ticket[],
-    pageCount: number
+    page?: number,
+    hiddenList?: Set<string>
 }
 
 export type ApiClient = {
@@ -29,7 +25,7 @@ export type ApiClient = {
 export const createApiClient = (): ApiClient => {
     return {
         getTickets: (args: ReqArgs) => {
-            const defaultArgs: ReqArgs = {reqno: 0};
+            const defaultArgs: ReqArgs = {reqno: 0, hiddenList: new Set<string>()};
             let safeArgs = Object.assign(defaultArgs, args);
             return axios.get(APIRootPath, { params: safeArgs }).then((res) => res.data);
         }
