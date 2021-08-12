@@ -96,7 +96,7 @@ export class App extends React.PureComponent<{}, AppState> {
   onRestore = () => {
     this.setState({ hiddenList: new Set<string>(), hiddenCount: 0 });
     this.updateStateFromServer();
-  };
+  }; 
 
   render() {
     const { tickets, hiddenCount } = this.state;
