@@ -31,10 +31,12 @@ export class App extends React.PureComponent<{}, AppState> {
   updateDebounce: any = null;
 
   async componentDidMount() {
-    this.updateStateFromServer(undefined, undefined, 0);
+    this.updateStateFromServer(false, false, undefined, undefined, 0);
   }
 
   updateStateFromServer = async (
+    updateSearch?: boolean,
+    updatePage?: boolean,
     newSearch?: string,
     newPage?: number,
     numHidden?: number,
@@ -56,8 +58,8 @@ export class App extends React.PureComponent<{}, AppState> {
       async () => {
         let query = await api.getTickets({
           reqno: 0,
-          search: newSearch ? newSearch : this.state.search,
-          page: newPage ? newPage : this.state.currPage,
+          search: updateSearch ? newSearch : this.state.search,
+          page: updatePage ? newPage : this.state.currPage,
           hiddenList: this.state.hiddenList,
         });
         if (!numHidden) {
@@ -82,24 +84,23 @@ export class App extends React.PureComponent<{}, AppState> {
   };
 
   onSearch = (val: string) => {
-    this.updateStateFromServer(val, 1);
+    this.updateStateFromServer(true, true, val, 1);
   };
-
   onHide = (ticket: Ticket) => {
     let numHidden = this.state.hiddenCount + 1;
     // let hiddenCopy =
     let id: string = ticket.id;
     this.state.hiddenList.add(id);
-    this.updateStateFromServer(undefined, undefined, numHidden);
+    this.updateStateFromServer(false, false, undefined, undefined, numHidden);
   };
 
   onRestore = () => {
     this.setState({ hiddenList: new Set<string>(), hiddenCount: 0 });
     this.updateStateFromServer();
-  }; 
+  };
 
   render() {
-    const { tickets, hiddenCount } = this.state;
+    const { tickets, search, hiddenCount } = this.state;
 
     return (
       <main>
@@ -113,6 +114,7 @@ export class App extends React.PureComponent<{}, AppState> {
         </header>
         <TicketList
           tickets={tickets}
+          search={search}
           totalResults={this.state.totalResults}
           hiddenCount={hiddenCount}
           onHide={this.onHide}

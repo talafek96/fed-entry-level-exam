@@ -31,16 +31,13 @@ app.get(APIPath, (req, res) => {
   let hiddenList: Set<string>;
   if (req.query.hiddenList) {
     hiddenList = new Set<string>(req.query.hiddenList);
-    console.log(hiddenList);
   } else {
     hiddenList = new Set<string>();
   }
 
   if (req.query.reqno === "0") {
-    console.time("Req0");
     if (!req.query.search) {
       const page: number = req.query.page || 1;
-      console.time("emptySearch");
       const paginatedData = tempData
         .filter((entry) => {
           if (hiddenList.has(entry.id)) {
@@ -49,19 +46,16 @@ app.get(APIPath, (req, res) => {
           return true;
         })
         .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-      console.timeEnd("emptySearch");
       let resDict: ResDict = {
         tickets: paginatedData,
         pageCount: Math.ceil(tempData.length / PAGE_SIZE),
         pageSize: PAGE_SIZE,
         totalCount: tempData.length,
       };
-      console.timeEnd("Req0");
       res.send(resDict);
       return;
     }
     const search = req.query["search"]!.toLowerCase();
-    console.time("Search");
     const searchRes = tempData.filter((entry) => {
       if (
         (
@@ -75,7 +69,6 @@ app.get(APIPath, (req, res) => {
       }
       return false;
     });
-    console.timeEnd("Search");
 
     const page: number = req.query.page || 1;
     let resDict: ResDict = {
@@ -84,7 +77,6 @@ app.get(APIPath, (req, res) => {
       pageSize: PAGE_SIZE,
       totalCount: searchRes.length,
     };
-    console.timeEnd("Req0");
     res.send(resDict);
     return;
   } else if (req.query.reqno === "1") {

@@ -4,6 +4,7 @@ import { Ticket } from "../api";
 
 export interface TicketListProps {
   tickets?: Ticket[];
+  search?: string;
   totalResults: number;
   hiddenCount: number;
   onHide: (ticket: Ticket) => void;
@@ -28,13 +29,13 @@ class TicketList extends React.Component<TicketListProps, {}> {
   };
 
   render() {
-    const { tickets, hiddenCount, onRestore, totalResults } = this.props;
+    const { tickets, search, hiddenCount, onRestore, totalResults } = this.props;
 
     return (
       <span>
         {tickets ? (
           <div className="results">
-            Showing {tickets.length} results from a total of {totalResults - (hiddenCount? hiddenCount : 0)}
+            Showing {tickets.length} results from a total of {totalResults - (search? 0 : (hiddenCount? hiddenCount : 0))}
             {hiddenCount ? (
               <div className="hidden-res">
                 {" "}
