@@ -1,16 +1,15 @@
 import React from "react";
 import "./App.scss";
 import { createApiClient, Ticket } from "./api";
-import Tag from "./components/tag"
-import Content from "./components/content"
-import TicketClass from "./components/ticket"
+import TicketList from "./components/ticketList";
 
 export type AppState = {
+  // TODO: Erase unnecessary fields
   tickets?: Ticket[];
   hiddenList: Set<string>;
   search: string;
   hiddenCount: number;
-  filteredOut: number;
+  // filteredOut: number;
   currPage: number;
   totalPages: number;
   totalResults: number;
@@ -23,45 +22,33 @@ export class App extends React.PureComponent<{}, AppState> {
     hiddenList: new Set<string>(),
     search: "",
     hiddenCount: 0,
-    filteredOut: 0,
+    // filteredOut: 0,
     currPage: 1,
     totalPages: 0,
-    totalResults: 0
+    totalResults: 0,
   };
 
   searchDebounce: any = null;
 
   async componentDidMount() {
-    console.log(1);
     this.setState({
       tickets: (await api.getTickets({ reqno: 0 })).tickets,
     });
-    console.log(2, this.state.tickets);
   }
-
-  renderTickets = (tickets: Ticket[]) => {
-    // TODO: Add counter of how many matching results were hidden.
-    // TODO: Make it so the number of found results change according to filter
-    const filteredTickets = tickets.filter(
-      (t) =>
-        (t.title.toLowerCase() + t.content.toLowerCase()).includes(
-          this.state.search.toLowerCase()
-        ) && (!this.state.hiddenList.has(t.id))
-    );
-    return (
-      <ul className="tickets">
-        {filteredTickets.map((ticket) => (
-          <TicketClass ticket={ticket} onHide={this.onHide} />
-        ))}
-      </ul>
-    );
-  };
 
   onSearch = async (val: string, newPage?: number) => {
     clearTimeout(this.searchDebounce);
 
     this.searchDebounce = setTimeout(async () => {
       this.setState({
+        tickets: (
+          await api.getTickets({
+            reqno: 0,
+            search: val,
+            page: this.state.currPage,
+            hiddenList: this.state.hiddenList,
+          })
+        ).tickets,
         search: val,
       });
     }, 300);
@@ -97,22 +84,13 @@ export class App extends React.PureComponent<{}, AppState> {
             onChange={(e) => this.onSearch(e.target.value)}
           />
         </header>
-        {tickets ? (
-          <div className="results">
-            Showing {tickets.length - hiddenCount} results
-            {hiddenCount ? (
-              <div className="hidden-res">
-                {" "}
-                ({hiddenCount} hidden tickets -{" "}
-                <a className="restore-button" onClick={this.onRestore}>
-                  restore
-                </a>
-                ){" "}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-        {tickets ? this.renderTickets(tickets) : <h2>Loading..</h2>}
+        <TicketList
+          tickets={tickets}
+          totalResults={this.state.totalResults}
+          hiddenCount={hiddenCount}
+          onHide={this.onHide}
+          onRestore={this.onRestore}
+        />
       </main>
     );
   }
