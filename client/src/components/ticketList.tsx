@@ -34,7 +34,7 @@ class TicketList extends React.Component<TicketListProps, {}> {
       <span>
         {tickets ? (
           <div className="results">
-            Showing {tickets.length} results from a total of {totalResults}
+            Showing {tickets.length} results from a total of {totalResults - (hiddenCount? hiddenCount : 0)}
             {hiddenCount ? (
               <div className="hidden-res">
                 {" "}
@@ -44,7 +44,7 @@ class TicketList extends React.Component<TicketListProps, {}> {
                 </a>
                 ){" "}
               </div>
-            ) : null}
+            ) : "."}
           </div>
         ) : null}
         {tickets ? this.renderTickets(tickets) : <h2>Loading..</h2>}

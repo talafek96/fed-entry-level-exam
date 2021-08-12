@@ -44,7 +44,6 @@ class Content extends React.PureComponent<ContentProps, ContentState> {
     const isLimited = false; // Turn this to true to enable line restriction
 
     let processed = this.processText(text, isLimited);
-    console.log(processed.text);
 
     return isLimited ? (
       <React.Fragment>

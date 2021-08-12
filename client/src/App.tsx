@@ -28,47 +28,74 @@ export class App extends React.PureComponent<{}, AppState> {
     totalResults: 0,
   };
 
-  searchDebounce: any = null;
+  updateDebounce: any = null;
 
   async componentDidMount() {
-    this.setState({
-      tickets: (await api.getTickets({ reqno: 0 })).tickets,
-    });
+    this.updateStateFromServer(undefined, undefined, 0);
   }
 
-  onSearch = async (val: string, newPage?: number) => {
-    clearTimeout(this.searchDebounce);
+  updateStateFromServer = async (
+    newSearch?: string,
+    newPage?: number,
+    numHidden?: number,
+    timeout?: number
+  ) => {
+    clearTimeout(this.updateDebounce);
+    let update = {};
+    if (newSearch) {
+      if (newPage) {
+        update = { search: newSearch, page: newPage };
+      } else {
+        update = { search: newSearch };
+      }
+    } else if (newPage) {
+      update = { page: newPage };
+    }
 
-    this.searchDebounce = setTimeout(async () => {
-      this.setState({
-        tickets: (
-          await api.getTickets({
-            reqno: 0,
-            search: val,
-            page: this.state.currPage,
-            hiddenList: this.state.hiddenList,
-          })
-        ).tickets,
-        search: val,
-      });
-    }, 300);
+    this.updateDebounce = setTimeout(
+      async () => {
+        let query = await api.getTickets({
+          reqno: 0,
+          search: newSearch ? newSearch : this.state.search,
+          page: newPage ? newPage : this.state.currPage,
+          hiddenList: this.state.hiddenList,
+        });
+        if (!numHidden) {
+          this.setState({
+            ...update,
+            tickets: query.tickets,
+            totalPages: query.pageCount,
+            totalResults: query.totalCount,
+          });
+        } else {
+          this.setState({
+            ...update,
+            hiddenCount: numHidden,
+            tickets: query.tickets,
+            totalPages: query.pageCount,
+            totalResults: query.totalCount,
+          });
+        }
+      },
+      timeout ? timeout : 300
+    );
+  };
+
+  onSearch = (val: string) => {
+    this.updateStateFromServer(val, 1);
   };
 
   onHide = (ticket: Ticket) => {
     let numHidden = this.state.hiddenCount + 1;
-    let hiddenCopy = this.state.hiddenList;
+    // let hiddenCopy =
     let id: string = ticket.id;
-
-    hiddenCopy.add(id);
-
-    this.setState({
-      hiddenList: hiddenCopy,
-      hiddenCount: numHidden,
-    });
+    this.state.hiddenList.add(id);
+    this.updateStateFromServer(undefined, undefined, numHidden);
   };
 
   onRestore = () => {
     this.setState({ hiddenList: new Set<string>(), hiddenCount: 0 });
+    this.updateStateFromServer();
   };
 
   render() {
