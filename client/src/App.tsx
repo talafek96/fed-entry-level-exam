@@ -1,12 +1,12 @@
 import React from "react";
 import "./App.scss";
 import { createApiClient, Ticket } from "./api";
-import { string } from "yargs";
 
 export type AppState = {
   tickets?: Ticket[];
   search: string;
   hiddenCount: number;
+  currPage: number;
 };
 
 export type ContentState = {
@@ -28,14 +28,17 @@ export class App extends React.PureComponent<{}, AppState> {
   state: AppState = {
     search: "",
     hiddenCount: 0,
+    currPage: 1,
   };
 
   searchDebounce: any = null;
 
   async componentDidMount() {
+    console.log(1);
     this.setState({
-      tickets: await api.getTickets(),
+      tickets: (await api.getTickets({ reqno: 0 })).tickets,
     });
+    console.log(2, this.state.tickets);
   }
 
   printLabels = (labels?: string[]) => {
@@ -66,6 +69,7 @@ export class App extends React.PureComponent<{}, AppState> {
 
   renderTickets = (tickets: Ticket[]) => {
     // TODO: Add counter of how many matching results were hidden.
+    // TODO: Make it so the number of found results change according to filter
     const filteredTickets = tickets.filter(
       (t) =>
         (t.title.toLowerCase() + t.content.toLowerCase()).includes(

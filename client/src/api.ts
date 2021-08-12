@@ -11,14 +11,27 @@ export type Ticket = {
     isHidden?: boolean;
 }
 
+export type ReqArgs = {
+    reqno: number,
+    search?: string,
+    page?: number
+}
+
+export type ResDict = {
+    tickets: Ticket[],
+    pageCount: number
+}
+
 export type ApiClient = {
-    getTickets: () => Promise<Ticket[]>;
+    getTickets: (args: ReqArgs) => Promise<ResDict>;
 }
 
 export const createApiClient = (): ApiClient => {
     return {
-        getTickets: () => {
-            return axios.get(APIRootPath).then((res) => res.data);
+        getTickets: (args: ReqArgs) => {
+            const defaultArgs: ReqArgs = {reqno: 0};
+            let safeArgs = Object.assign(defaultArgs, args);
+            return axios.get(APIRootPath, { params: safeArgs }).then((res) => res.data);
         }
     }
 }
