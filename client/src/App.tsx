@@ -2,6 +2,7 @@ import React from "react";
 import "./App.scss";
 import { createApiClient, Ticket } from "./api";
 import TicketList from "./components/ticketList";
+import Pagination from "./components/pagination";
 
 export type AppState = {
   // TODO: Erase unnecessary fields
@@ -9,7 +10,7 @@ export type AppState = {
   hiddenList: Set<string>;
   search: string;
   hiddenCount: number;
-  // filteredOut: number;
+  pageSize: number;
   currPage: number;
   totalPages: number;
   totalResults: number;
@@ -22,7 +23,7 @@ export class App extends React.PureComponent<{}, AppState> {
     hiddenList: new Set<string>(),
     search: "",
     hiddenCount: 0,
-    // filteredOut: 0,
+    pageSize: 20,
     currPage: 1,
     totalPages: 0,
     totalResults: 0,
@@ -37,6 +38,7 @@ export class App extends React.PureComponent<{}, AppState> {
   updateStateFromServer = async (
     updateSearch?: boolean,
     updatePage?: boolean,
+    updateHidden?: boolean,
     newSearch?: string,
     newPage?: number,
     numHidden?: number,
@@ -46,12 +48,12 @@ export class App extends React.PureComponent<{}, AppState> {
     let update = {};
     if (newSearch) {
       if (newPage) {
-        update = { search: newSearch, page: newPage };
+        update = { search: newSearch, currPage: newPage };
       } else {
         update = { search: newSearch };
       }
     } else if (newPage) {
-      update = { page: newPage };
+      update = { currPage: newPage };
     }
 
     this.updateDebounce = setTimeout(
@@ -62,36 +64,36 @@ export class App extends React.PureComponent<{}, AppState> {
           page: updatePage ? newPage : this.state.currPage,
           hiddenList: this.state.hiddenList,
         });
-        if (!numHidden) {
-          this.setState({
-            ...update,
-            tickets: query.tickets,
-            totalPages: query.pageCount,
-            totalResults: query.totalCount,
-          });
-        } else {
-          this.setState({
-            ...update,
-            hiddenCount: numHidden,
-            tickets: query.tickets,
-            totalPages: query.pageCount,
-            totalResults: query.totalCount,
-          });
-        }
+        this.setState({
+          ...update,
+          tickets: query.tickets,
+          totalPages: query.pageCount,
+          totalResults: query.totalCount,
+          pageSize: query.pageSize,
+          search: updateSearch ? newSearch! : this.state.search,
+          hiddenCount: updateHidden ? numHidden! : this.state.hiddenCount,
+        });
       },
       timeout ? timeout : 300
     );
   };
 
   onSearch = (val: string) => {
-    this.updateStateFromServer(true, true, val, 1);
+    this.updateStateFromServer(true, true, false, val, 1);
   };
   onHide = (ticket: Ticket) => {
     let numHidden = this.state.hiddenCount + 1;
     // let hiddenCopy =
     let id: string = ticket.id;
     this.state.hiddenList.add(id);
-    this.updateStateFromServer(false, false, undefined, undefined, numHidden);
+    this.updateStateFromServer(
+      false,
+      false,
+      true,
+      undefined,
+      undefined,
+      numHidden
+    );
   };
 
   onRestore = () => {
@@ -99,8 +101,12 @@ export class App extends React.PureComponent<{}, AppState> {
     this.updateStateFromServer();
   };
 
+  onPageChange = (newPage: number) => {
+    this.updateStateFromServer(false, true, false, undefined, newPage);
+  };
+
   render() {
-    const { tickets, search, hiddenCount } = this.state;
+    const { tickets, currPage, totalPages, hiddenCount } = this.state;
 
     return (
       <main>
@@ -112,11 +118,17 @@ export class App extends React.PureComponent<{}, AppState> {
             onChange={(e) => this.onSearch(e.target.value)}
           />
         </header>
+        <Pagination
+          currPage={currPage}
+          totalPages={totalPages}
+          onPageChange={this.onPageChange}
+        />
         <TicketList
           tickets={tickets}
-          search={search}
           totalResults={this.state.totalResults}
           hiddenCount={hiddenCount}
+          currPage={this.state.currPage}
+          pageSize={this.state.pageSize}
           onHide={this.onHide}
           onRestore={this.onRestore}
         />

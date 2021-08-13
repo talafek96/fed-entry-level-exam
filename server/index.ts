@@ -38,11 +38,13 @@ app.get(APIPath, (req, res) => {
   if (req.query.reqno === "0") {
     if (!req.query.search) {
       const page: number = req.query.page || 1;
+      let count = 0;
       const paginatedData = tempData
         .filter((entry) => {
           if (hiddenList.has(entry.id)) {
             return false;
           }
+          count++;
           return true;
         })
         .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -50,7 +52,7 @@ app.get(APIPath, (req, res) => {
         tickets: paginatedData,
         pageCount: Math.ceil(tempData.length / PAGE_SIZE),
         pageSize: PAGE_SIZE,
-        totalCount: tempData.length,
+        totalCount: count,
       };
       res.send(resDict);
       return;

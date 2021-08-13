@@ -64,12 +64,50 @@ body {
     font-size: 12px;
   }
 
-  .tickets {
-    margin: 0;
-    padding: 0;
+  @mixin pagination-size($padding-y, $padding-x, $font-size, $border-radius) {
+    .page-link {
+      padding: $padding-y $padding-x;
+      @include font-size($font-size);
+    }
 
-    .ticket {
-      width: 100%;
+    .page-item {
+      @if $pagination-margin-start == (-$pagination-border-width) {
+        &:first-child {
+          .page-link {
+            @include border-start-radius($border-radius);
+          }
+        }
+
+        &:last-child {
+          .page-link {
+            @include border-end-radius($border-radius);
+          }
+        }
+      } @else {
+        //Add border-radius to all pageLinks in case they have left margin
+        .page-link {
+          @include border-radius($border-radius);
+        }
+      }
+    }
+  }
+
+  .pagination {
+    display: flex;
+    list-style: none;
+
+    .page-link {
+      display: block;
+      position: relative;
+      color: rgb(0, 0, 0);
+      text-decoration: none;
+      background-color: rgb(255, 255, 255);
+      border-color: rgb(209, 235, 252);
+      transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      flex-direction: column;
+      font-size: 14px;
+
       flex-shrink: 0;
       border-radius: 8px;
       background-color: #fff;
@@ -78,97 +116,157 @@ body {
       display: flex;
       flex-direction: column;
       border: 1px solid #fff;
-      padding: 10px 20px;
+      padding: 5px 10px;
       transition: box-shadow 0.2s ease-in-out;
       position: relative;
 
       &:hover {
-        box-shadow: 0 2px 6px 1px #30516a;
-
-        .hide-button {
-          visibility: visible;
-        }
+        z-index: 2;
+        color: black;
+        text-decoration: none;
+        background-color: rgb(214, 214, 214);
+        border-color: rgb(255, 255, 255);
       }
+
+      &:focus {
+        z-index: 3;
+        color: black;
+        background-color: rgb(0, 134, 224);
+        outline: black;
+        box-shadow: white;
+      }
+    }
+    .page-item {
+      flex-shrink: 0;
+      border-radius: 6px;
+      flex-direction: column;
+      padding: 2px 4px;
+      vertical-align: inherit;
+      text-align: center;
+
+      &:not(:first-child) .page-link {
+        margin-left: 0px;
+      }
+      &.active .page-link {
+        z-index: 3;
+        color: rgb(255, 255, 255);
+        background-color: cornflowerblue;
+        border-color: rgb(4, 39, 168);
+      }
+      &.disabled .page-link {
+        color: rgb(0, 0, 0);
+        pointer-events: none;
+        background-color: rgb(255, 255, 255);
+        border-color: rgb(154, 215, 255);
+      }
+    }
+  }
+}
+
+.tickets {
+  margin: 0;
+  padding: 0;
+
+  .ticket {
+    width: 100%;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 6px 1px #e1e5e8;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #fff;
+    padding: 10px 20px;
+    transition: box-shadow 0.2s ease-in-out;
+    position: relative;
+
+    &:hover {
+      box-shadow: 0 2px 6px 1px #30516a;
 
       .hide-button {
-        visibility: hidden;
-        color: #20455e;
+        visibility: visible;
+      }
+    }
+
+    .hide-button {
+      visibility: hidden;
+      color: #20455e;
+      font-size: 12px;
+      margin: 1px 0;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    .title {
+      margin: 5px 0;
+      font-size: 16px;
+      font-weight: 400;
+      font-style: normal;
+      color: #20455e;
+    }
+
+    .content {
+      color: #7a92a5;
+      font-size: 13px;
+      margin: 10px 0;
+      flex-shrink: 0;
+      flex: 1px;
+      flex-direction: row;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .restricted-content {
+      color: #7a92a5;
+      font-size: 13px;
+      margin: 10px 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      .meta-data {
+        text-align: left;
+        color: #7a92a5;
         font-size: 12px;
-        margin: 1px 0;
-        flex-shrink: 0;
-        align-self: flex-end;
-      }
-
-      .title {
-        margin: 5px 0;
-        font-size: 16px;
-        font-weight: 400;
-        font-style: normal;
-        color: #20455e;
-      }
-
-      .content {
-        color: #7a92a5;
-        font-size: 13px;
         margin: 10px 0;
         flex-shrink: 0;
-        flex: 1px;
-        flex-direction: row;
-        overflow-wrap: break-word;
-        white-space: pre-wrap;
       }
 
-      .restricted-content {
-        color: #7a92a5;
-        font-size: 13px;
-        margin: 10px 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow-wrap: break-word;
-        white-space: pre-wrap;
-      }
+      .tags {
+        align-content: right;
 
-      footer {
-        display: flex;
-        justify-content: space-between;
-        .meta-data {
-          text-align: left;
-          color: #7a92a5;
-          font-size: 12px;
-          margin: 10px 0;
+        .tag {
+          width: 100%;
           flex-shrink: 0;
-        }
+          border-radius: 6px;
+          background-color: rgb(209, 235, 252);
+          box-shadow: 0 2px 6px 1px #e1e5e8;
 
-        .tags {
-          align-content: right;
+          display: inline;
+          flex-direction: column;
+          border: 1px solid rgb(209, 235, 252);
+          padding: 0px 10px;
+          position: relative;
+          margin: 2px;
 
-          .tag {
-            width: 100%;
-            flex-shrink: 0;
-            border-radius: 6px;
-            background-color: rgb(209, 235, 252);
-            box-shadow: 0 2px 6px 1px #e1e5e8;
+          align-content: center;
+          transition: box-shadow 0.2s ease-in-out;
+          color: #20455e;
+          font-size: 13px;
 
-            display: inline;
-            flex-direction: column;
-            border: 1px solid rgb(209, 235, 252);
-            padding: 0px 10px;
-            position: relative;
-            margin: 2px;
-
-            align-content: center;
-            transition: box-shadow 0.2s ease-in-out;
-            color: #20455e;
-            font-size: 13px;
-
-            &:hover {
-              box-shadow: 0 2px 6px 1px #30516a;
-              background-color: rgb(154, 215, 255);
-              border: 1px solid rgb(154, 215, 255);
-            }
+          &:hover {
+            box-shadow: 0 2px 6px 1px #30516a;
+            background-color: rgb(154, 215, 255);
+            border: 1px solid rgb(154, 215, 255);
           }
         }
       }

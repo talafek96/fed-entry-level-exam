@@ -4,19 +4,17 @@ import { Ticket } from "../api";
 
 export interface TicketListProps {
   tickets?: Ticket[];
-  search?: string;
+  currPage: number;
+  pageSize: number;
   totalResults: number;
   hiddenCount: number;
   onHide: (ticket: Ticket) => void;
   onRestore: () => void;
 }
 
-export interface TicketListState {}
-
 class TicketList extends React.Component<TicketListProps, {}> {
   renderTickets = (tickets: Ticket[]) => {
     // TODO: Add counter of how many matching results were hidden.
-    // TODO: Make it so the number of found results change according to filter
     const { onHide } = this.props;
 
     return (
@@ -28,14 +26,42 @@ class TicketList extends React.Component<TicketListProps, {}> {
     );
   };
 
+  renderResultDescription = () => {
+    const {
+      tickets,
+      totalResults,
+      currPage,
+      pageSize,
+    } = this.props;
+    if(tickets && tickets.length) { 
+        return (
+            <span>
+                Showing tickets {(currPage - 1) * pageSize + 1}-
+                {(currPage - 1) * pageSize + tickets.length} out of a total of{" "}{totalResults}
+            </span>
+        )
+    }
+    else {
+        return (
+            <span>
+                No results found
+            </span>
+        )
+    }
+  };
+
   render() {
-    const { tickets, search, hiddenCount, onRestore, totalResults } = this.props;
+    const {
+      tickets,
+      hiddenCount,
+      onRestore,
+    } = this.props;
 
     return (
       <span>
         {tickets ? (
           <div className="results">
-            Showing {tickets.length} results from a total of {totalResults - (search? 0 : (hiddenCount? hiddenCount : 0))}
+            {this.renderResultDescription()}
             {hiddenCount ? (
               <div className="hidden-res">
                 {" "}
@@ -45,7 +71,9 @@ class TicketList extends React.Component<TicketListProps, {}> {
                 </a>
                 ){" "}
               </div>
-            ) : "."}
+            ) : (
+              "."
+            )}
           </div>
         ) : null}
         {tickets ? this.renderTickets(tickets) : <h2>Loading..</h2>}
