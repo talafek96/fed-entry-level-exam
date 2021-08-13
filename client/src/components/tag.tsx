@@ -1,10 +1,10 @@
-import React, { Component } from "react";
+import React, { PureComponent } from "react";
 
 export type TagProps = {
   label: string;
 };
 
-class Tag extends React.PureComponent<TagProps, {}> {
+class Tag extends PureComponent<TagProps, {}> {
   // state = { :  }
   render() {
     const { label } = this.props;

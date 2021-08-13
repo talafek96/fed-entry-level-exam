@@ -13,9 +13,18 @@ export type ResDict = {
   totalCount: number;
 };
 
+declare type SearchRes = {
+  search: string;
+  result: ResDict;
+};
+
 const app = express();
 
 const PAGE_SIZE = 20;
+
+const MAX_TLB_SIZE = 100;
+let TLB: SearchRes[] = [];
+let cyclic: number = 0;
 
 app.use(bodyParser.json());
 
@@ -25,6 +34,50 @@ app.use((_, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "*");
   next();
 });
+
+const tlbLookup = (search: string) => {
+  if (search === "") {
+    return {
+      tickets: tempData,
+      pageCount: Math.ceil(tempData.length / PAGE_SIZE),
+      pageSize: PAGE_SIZE,
+      totalCount: tempData.length,
+    };
+  }
+  let result = TLB.find((element) => element.search === search);
+  if (result === undefined) {
+    const filtered = tempData.filter((entry) => {
+      if (
+        (
+          entry["title"].toLowerCase() + entry["content"].toLowerCase()
+        ).includes(search)
+      ) {
+        return true;
+      }
+      return false;
+    });
+    let res = {
+      tickets: filtered,
+      pageCount: Math.ceil(filtered.length / PAGE_SIZE),
+      pageSize: PAGE_SIZE,
+      totalCount: filtered.length,
+    };
+
+    TLB[cyclic] = {
+      search: search,
+      result: res,
+    };
+    cyclic = (cyclic + 1) % MAX_TLB_SIZE;
+
+    return res;
+  }
+  return result.result;
+};
+
+// This should be used if any time change/update is done to the database:
+const tlbFlush = () => {
+  TLB = [];
+};
 
 app.get(APIPath, (req, res) => {
   // @ts-ignore\
@@ -58,18 +111,12 @@ app.get(APIPath, (req, res) => {
       return;
     }
     const search = req.query["search"]!.toLowerCase();
-    const searchRes = tempData.filter((entry) => {
-      if (
-        (
-          entry["title"].toLowerCase() + entry["content"].toLowerCase()
-        ).includes(search)
-      ) {
-        if (hiddenList.has(entry.id)) {
-          return false;
-        }
-        return true;
+    const lookup = tlbLookup(search);
+    const searchRes = lookup.tickets.filter((entry) => {
+      if (hiddenList.has(entry.id)) {
+        return false;
       }
-      return false;
+      return true;
     });
 
     const page: number = req.query.page || 1;

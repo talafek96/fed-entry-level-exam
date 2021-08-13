@@ -12,9 +12,8 @@ export interface TicketListProps {
   onRestore: () => void;
 }
 
-class TicketList extends React.Component<TicketListProps, {}> {
+class TicketList extends Component<TicketListProps, {}> {
   renderTickets = (tickets: Ticket[]) => {
-    // TODO: Add counter of how many matching results were hidden.
     const { onHide } = this.props;
 
     return (

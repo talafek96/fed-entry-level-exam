@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { PureComponent } from "react";
 
 export type ContentState = {
   expanded: boolean;
@@ -9,7 +9,7 @@ export type ContentProps = {
   id: string;
 };
 
-class Content extends React.PureComponent<ContentProps, ContentState> {
+class Content extends PureComponent<ContentProps, ContentState> {
   state: ContentState = { expanded: false };
 
   handleExpand = () => {

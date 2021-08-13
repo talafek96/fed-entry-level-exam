@@ -5,7 +5,6 @@ import TicketList from "./components/ticketList";
 import Pagination from "./components/pagination";
 
 export type AppState = {
-  // TODO: Erase unnecessary fields
   tickets?: Ticket[];
   hiddenList: Set<string>;
   search: string;

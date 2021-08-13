@@ -8,7 +8,7 @@ export interface PaginationProps {
 
 export interface PaginationState {}
 
-class Pagination extends React.PureComponent<PaginationProps, PaginationState> {
+class Pagination extends PureComponent<PaginationProps, PaginationState> {
   // state = { :  }
 
   generatePages = () => {
